@@ -7,65 +7,35 @@ class HashTableEntry:
         self.value = value
         self.next = None
 
-
-# Hash table can't have fewer than this many slots
-MIN_CAPACITY = 10
-
+MIN_CAPACITY = 8
 
 class HashTable:
-    """
-    A hash table that with `capacity` buckets
-    that accepts string keys
-
-    Implement this.
-    """
-
     def __init__(self, capacity):
         self.capacity = capacity
-        if self.capacity < 10:
-            self.capacity = 10
+        if self.capacity < 8:
+            self.capacity = 8            
         self.array = [None] * self.capacity
-
-
+        self.load = 0
+        self.loadFactor = self.load / self.capacity
 
     def get_num_slots(self):
         """
         Return the length of the list you're using to hold the hash
         table data. (Not the number of items stored in the hash table,
         but the number of slots in the main list.)
-
         One of the tests relies on this.
-
         Implement this.
         """
-        # Your code here
-
+        # TODO
 
     def get_load_factor(self):
         """
         Return the load factor for this hash table.
-
         Implement this.
         """
-        # Your code here
-
-
-    def fnv1(self, key):
-        """
-        FNV-1 Hash, 64-bit
-
-        Implement this, and/or DJB2.
-        """
-
-        # Your code here
-
+        # TODO
 
     def djb2(self, key):
-        """
-        DJB2 hash, 32-bit
-
-        Implement this, and/or FNV-1.
-        """
         hash = 5381
         byte_array = key.encode('utf-8')
 
@@ -74,24 +44,19 @@ class HashTable:
 
         return hash % 8
 
-
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
         Store the value with the given key.
-
         Hash collisions should be handled with Linked List Chaining.
-
         Implement this.
         """
-        # Your code here
         index = self.djb2(key)
         if self.array[index] is not None:
             for kvp in self.array[index]:
@@ -100,41 +65,31 @@ class HashTable:
                     break
                 else:
                     self.array[index].append([key, value])
+        # Store the value with the given key
         else:
             self.array[index] = []
             self.array[index].append([key, value])
 
 
     def delete(self, key):
-        """
-        Remove the value stored with the given key.
-
-        Print a warning if the key is not found.
-
-        Implement this.
-        """
-        # Your code here
         index = self.djb2(key)
+        # If the key is not found,
         if self.array[index] is None:
+            # Prints a warning if the key is not found
             return KeyError()
         else:
+            # Remove the value stored with the given key.
             for i in list(range(len(self.array[index]))):
                 if self.array[index][i][0] == key:
-                    del self.array[index][i]
+                    del self.array[index][i][0]
 
 
     def get(self, key):
-        """
-        Retrieve the value stored with the given key.
-
-        Returns None if the key is not found.
-
-        Implement this.
-        """
-        # Your code here
-        index = self.djb2(key)
+        index = self.djb2(key) % self.capacity
+        # Returns None if the key is not found
         if self.array[index] is None:
             return None
+        # Retrieve the value stored with the given key
         else:
             for kvp in self.array[index]:
                 if kvp[0] == key:
@@ -146,10 +101,9 @@ class HashTable:
         """
         Changes the capacity of the hash table and
         rehashes all key/value pairs.
-
         Implement this.
         """
-        # Your code here
+        # TODO
 
 
 
