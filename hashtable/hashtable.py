@@ -9,7 +9,7 @@ class HashTableEntry:
 
 
 # Hash table can't have fewer than this many slots
-MIN_CAPACITY = 8
+MIN_CAPACITY = 10
 
 
 class HashTable:
@@ -21,7 +21,11 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        self.capacity = capacity
+        if self.capacity < 10:
+            self.capacity = 10
+        self.array = [None] * self.capacity
+
 
 
     def get_num_slots(self):
@@ -62,7 +66,13 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
-        # Your code here
+        hash = 5381
+        byte_array = key.encode('utf-8')
+
+        for byte in byte_array:
+            hash = ((hash * 33) ^ byte) % 0x100000000
+
+        return hash % 8
 
 
     def hash_index(self, key):
@@ -82,6 +92,17 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.djb2(key)
+        if self.array[index] is not None:
+            for kvp in self.array[index]:
+                if kvp[0] == key:
+                    kvp[1] = value
+                    break
+                else:
+                    self.array[index].append([key, value])
+        else:
+            self.array[index] = []
+            self.array[index].append([key, value])
 
 
     def delete(self, key):
@@ -93,6 +114,13 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.djb2(key)
+        if self.array[index] is None:
+            return KeyError()
+        else:
+            for i in list(range(len(self.array[index]))):
+                if self.array[index][i][0] == key:
+                    del self.array[index][i]
 
 
     def get(self, key):
@@ -104,6 +132,14 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.djb2(key)
+        if self.array[index] is None:
+            return None
+        else:
+            for kvp in self.array[index]:
+                if kvp[0] == key:
+                    return kvp[1]
+            return None
 
 
     def resize(self, new_capacity):
