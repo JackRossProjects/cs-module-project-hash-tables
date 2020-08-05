@@ -1,22 +1,29 @@
 class HashTableEntry:
-    """
-    Linked List hash table key/value pair
-    """
     def __init__(self, key, value):
         self.key = key
         self.value = value
         self.next = None
 
+    def __repr__(self):
+        return f'key: {self.key}, value:{self.value}'
+
 MIN_CAPACITY = 8
 
 class HashTable:
+    """
+    A hash table that with `capacity` buckets
+    that accepts string keys
+    Implement this.
+    """
+
     def __init__(self, capacity):
-        self.capacity = capacity
-        if self.capacity < 8:
-            self.capacity = 8            
-        self.array = [None] * self.capacity
-        self.load = 0
-        self.loadFactor = self.load / self.capacity
+        self.min_capacity = MIN_CAPACITY
+        if capacity > self.min_capacity:
+            self.capacity = capacity
+        else:
+            self.capacity = self.min_capacity
+        self.bucket = [None] * self.capacity
+        self.count = 0
 
     def get_num_slots(self):
         """
@@ -26,23 +33,36 @@ class HashTable:
         One of the tests relies on this.
         Implement this.
         """
-        # TODO
+        return self.capacity
 
     def get_load_factor(self):
         """
         Return the load factor for this hash table.
         Implement this.
         """
-        # TODO
+        return self.count / self.capacity
+
+    def fnv1(self, key):
+        """
+        FNV-1 Hash, 64-bit
+        Implement this, and/or DJB2.
+        """
+
+        # Your code here
 
     def djb2(self, key):
-        hash = 5381
-        byte_array = key.encode('utf-8')
+        """
+        DJB2 hash, 32-bit
+        Implement this, and/or FNV-1.
+        """
 
-        for byte in byte_array:
-            hash = ((hash * 33) ^ byte) % 0x100000000
+        str_key = str(key).encode()
 
-        return hash % 8
+        hash_value = 5381
+
+        for i in key.encode():
+            hash_value = (hash_value * 33) + i
+        return hash_value
 
     def hash_index(self, key):
         """
@@ -57,45 +77,81 @@ class HashTable:
         Hash collisions should be handled with Linked List Chaining.
         Implement this.
         """
-        index = self.djb2(key)
-        if self.array[index] is not None:
-            for kvp in self.array[index]:
-                if kvp[0] == key:
-                    kvp[1] = value
-                    break
-                else:
-                    self.array[index].append([key, value])
-        # Store the value with the given key
+        index = self.hash_index(key)
+        if self.bucket[index] == None:
+            self.bucket[index] = HashTableEntry(key, value)
+            self.count += 1
         else:
-            self.array[index] = []
-            self.array[index].append([key, value])
-
+            current = self.bucket[index]
+            while current.next != None and current.key != key:
+                current = current.next
+            if current.key == key:
+                current.value = value
+            else:
+                new_entry = HashTableEntry(key, value)
+                new_entry.next = self.bucket[index]
+                self.bucket[index] = new_entry
+                self.count += 1
+        if self.get_load_factor() > .7:
+            self.resize(self.capacity * 2)
 
     def delete(self, key):
-        index = self.djb2(key)
-        # If the key is not found,
-        if self.array[index] is None:
-            # Prints a warning if the key is not found
-            return KeyError()
+        """
+        Remove the value stored with the given key.
+        Print a warning if the key is not found.
+        Implement this.
+        """
+        index = self.hash_index(key)
+        if self.bucket[index].key == key:
+            if self.bucket[index].next == None:
+                self.bucket[index] = None
+                self.count -= 1
+            else:
+                new_head = self.bucket[index].next
+                self.bucket[index].next = None
+                self.bucket[index] = new_head
+                self.count -= 1
         else:
-            # Remove the value stored with the given key.
-            for i in list(range(len(self.array[index]))):
-                if self.array[index][i][0] == key:
-                    del self.array[index][i][0]
-
+            if self.bucket[index] == None:
+                return None
+            else:
+                current = self.bucket[index]
+                previous = None
+                while current.next is not None and current.key != key:
+                    previous = current
+                    current = current.next
+                if current.key == key:
+                    previous.next = current.next
+                    self.count -= 1
+                    return current.value
+                else:
+                    return None
+                    
+        if self.get_load_factor() < .2:
+            if self.capacity/2 > 8:
+                self.resize(self.capacity // 2)
+            elif self.capacity > 8:
+                self.resize(8)
 
     def get(self, key):
-        index = self.djb2(key) % self.capacity
-        # Returns None if the key is not found
-        if self.array[index] is None:
+        """
+        Retrieve the value stored with the given key.
+        Returns None if the key is not found.
+        Implement this.
+        """
+        index = self.hash_index(key)
+        if self.bucket[index] is not None and self.bucket[index].key == key:
+            return self.bucket[index].value
+        elif self.bucket[index]is None:
             return None
-        # Retrieve the value stored with the given key
         else:
-            for kvp in self.array[index]:
-                if kvp[0] == key:
-                    return kvp[1]
-            return None
-
+            current = self.bucket[index]
+            while current.next != None and current.key != key:
+                current = self.bucket[index].next
+            if current == None:
+                return None
+            else:
+                return current.value
 
     def resize(self, new_capacity):
         """
@@ -103,7 +159,13 @@ class HashTable:
         rehashes all key/value pairs.
         Implement this.
         """
-        # TODO
+        prev_table = self.bucket[:]
+        self.capacity = new_capacity
+        self.bucket = [None] * new_capacity
+        for i in range(len(prev_table)):
+            if prev_table[i] is not None:
+                current = prev_table[i]
+                self.put(current.key, current.value)
 
 
 
